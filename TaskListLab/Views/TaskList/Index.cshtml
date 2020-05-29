@@ -1,0 +1,141 @@
+﻿@model IEnumerable<TaskListLab.Models.TaskList>
+<!doctype html>
+<html>
+<head>
+    @{
+        ViewData["Title"] = "User Task List";
+    }
+
+    <style>
+        /* Style the buttons */
+        .btn {
+            border: none;
+            outline: none;
+            padding: 12px 16px;
+            background-color: #f1f1f1;
+            cursor: pointer;
+        }
+
+        /* Add a light grey background on mouse-over */
+        .btn:hover {
+            background-color: #ddd;
+        }
+
+        /* Add a dark background to the active button */
+        .btn.active {
+            background-color: #666;
+            color: white;
+        }
+    </style>
+
+    <script>
+    
+        function ConfirmDelete(taskId) {
+            if (true === confirm("are you sure you want to delete task #" + taskId + "?")) {
+                document.location = "/TaskList/DeleteTask?taskId=" + taskId;
+                return true;
+            }
+        }
+
+        function ToggleComplete(taskId, newstatus) {
+            if (true === confirm("are you sure you want to mark task #" + taskId + " as " + newstatus + "?")) {
+                document.location = "/TaskList/ToggleComplete?taskId=" + taskId;
+                return true;
+            }
+        }
+
+        var completed = "";// maintains state of our completed status buttons
+
+        function filterRows(button) {
+            // modified original code from:
+            // https://www.w3schools.com/howto/howto_js_filter_table.asp
+
+            if (button) {
+                completed = button.value;
+                // Add active class to the current control button (highlight it)
+                var current = document.getElementsByClassName("active");
+                current[0].className = current[0].className.replace(" active", "");
+                button.className += " active";
+            }
+
+            // Declare variables
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("descFilter");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+
+            // Loop through all table rows, and hide those who don't match the search query
+            for (i = 1; i < tr.length; i++) {
+                td1 = tr[i].getElementsByTagName("td")[1];// filter on the description field
+                td3 = tr[i].getElementsByTagName("td")[3];// filter on the completed column
+                txtValue1 = td1.innerText.toUpperCase().indexOf(filter);
+                txtValue3 = td3.innerText.indexOf(completed);
+                if (txtValue3 > -1 && txtValue1 > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Your Task List</h1>
+
+    <p>
+        <div id="toolbar">
+            <span style="float: left">
+                <button onclick="document.location = '/TaskList/CreateTask';">Create New Task</button>
+                <input size="45" type="text" id="descFilter" onkeyup="filterRows('')" placeholder="Enter text to filter tasks by description...">
+            </span>
+
+            <span style="float: right" id="myBtnContainer">
+                <button class="btn active" onclick="filterRows(this)" value="e">Show all</button>
+                <button class="btn" onclick="filterRows(this)" value="T">Show Only Completed</button>
+                <button class="btn" onclick="filterRows(this)" value="F">Show Only Uncompleted</button>
+            </span>
+        </div>
+    </p>
+    <table id="myTable" class="table">
+        <tr>
+            <th>Task ID</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Complete</th>
+            <th>User</th>
+            <th></th>
+        </tr>
+
+        @if (@Model.Count() == 0)
+        {
+            <tr><td colspan="6"><i>Your Task List is currently empty. Use the "Create Task" button to add new tasks.</i></td></tr>
+        }
+
+        @foreach (var task in Model)
+        {
+            <tr>
+                <td>@task.Id</td>
+                <td>@task.Description</td>
+                <td>@task.DueDate.ToString("MM/dd/yyyy")</td>
+                <td>@task.Complete</td>
+                <td>@task.UserId</td>
+                <td>
+                    @if (task.Complete)
+                    {
+                        <input type=button value="Mark Not Complete" onclick="ToggleComplete(@task.Id, 'Not Complete')" />
+                    }
+                    else
+                    {
+                        <input type=button value="Mark Complete" onclick="ToggleComplete(@task.Id, 'Complete')" />
+                    }
+
+                    <input type=button value="Delete Task" onclick="ConfirmDelete(@task.Id)" />
+                </td>
+            </tr>
+        }
+    </table>
+
+</body>
+</html>
